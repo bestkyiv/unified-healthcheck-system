@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "db:up": "docker compose -f postgres/docker-compose.yml up -d",
+    "db:down": "docker compose -f postgres/docker-compose.yml down"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
