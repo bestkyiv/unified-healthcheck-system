@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Unified Healthcheck - API Server
+  description: Core backend engine handling health checks.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Shared secret defined in the INTERNAL_API_KEY environment variable. Must be set identically on both the API Server and the Notification Bot. Requests with a missing or mismatched key are rejected with 401.
+
+  schemas:
+    ServiceType:
+      type: string
+      enum: [website, telegram_bot]
+
+    ServiceStatus:
+      type: string
+      enum: [up, down]
+
+    ServiceSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: My Website
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        url_or_identifier:
+          type: string
+          example: https://example.com
+        is_active:
+          type: boolean
+          example: true
+        latest_status:
+          $ref: '#/components/schemas/ServiceStatus'
+        response_time_ms:
+          type: integer
+          nullable: true
+          example: 142
+        uptime_7d_percent:
+          type: number
+          format: float
+          example: 99.85
+        last_checked_at:
+          type: string
+          format: date-time
+          example: "2026-05-04T12:00:00.000Z"
+
+    ServiceCreated:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "3"
+        name:
+          type: string
+          example: My Website
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        url_or_identifier:
+          type: string
+          example: https://example.com
+        interval_ms:
+          type: integer
+          example: 60000
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-05-04T12:00:00.000Z"
+
+    OkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invalid request body
+
+paths:
+  /api/services:
+    get:
+      summary: Get all services
+      description: Returns the latest status snapshot for all monitored services. Consumed by the web dashboard via polling.
+      operationId: getServices
+      tags: [Public]
+      responses:
+        '200':
+          description: List of all services with their latest status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceSummary'
+
+    post:
+      summary: Register a new service
+      description: Adds a new service to be monitored and dynamically schedules a health check job without a server restart.
+      operationId: createService
+      tags: [Internal]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type, url_or_identifier, interval_ms]
+              properties:
+                name:
+                  type: string
+                  example: My Website
+                type:
+                  $ref: '#/components/schemas/ServiceType'
+                url_or_identifier:
+                  type: string
+                  example: https://example.com
+                interval_ms:
+                  type: integer
+                  description: Check or heartbeat interval in milliseconds.
+                  example: 60000
+      responses:
+        '201':
+          description: Service created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceCreated'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Service with same url_or_identifier already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/services/{id}:
+    patch:
+      summary: Toggle service active state
+      description: Enables or disables monitoring for a service without deleting it. Used by the bot's /pause and /resume commands.
+      operationId: toggleService
+      tags: [Internal]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the service to update
+          example: "3"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_active]
+              properties:
+                is_active:
+                  type: boolean
+                  example: false
+      responses:
+        '200':
+          description: Service updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceCreated'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Remove a service
+      description: Deletes a monitored service and cancels its associated scheduler job.
+      operationId: deleteService
+      tags: [Internal]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the service to remove
+          example: "3"
+      responses:
+        '200':
+          description: Service deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/heartbeat:
+    post:
+      summary: Receive bot heartbeat
+      description: Accepts a heartbeat ping from a monitored Telegram bot to confirm it is alive.
+      operationId: receiveHeartbeat
+      tags: [Public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [service_id]
+              properties:
+                service_id:
+                  type: string
+                  example: "2"
+      responses:
+        '200':
+          description: Heartbeat recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '400':
+          description: Missing or invalid body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Service ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Public
+    description: Endpoints accessible without authentication
+  - name: Internal
+    description: Endpoints restricted to internal services via x-api-key header
