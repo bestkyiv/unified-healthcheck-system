@@ -1,8 +1,9 @@
-const server = Bun.serve({
-  port: 3000,
-  routes: {
-    "/": () => new Response("Bun!"),
-  },
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => {
+  return c.json([1, 2, 3]);
 });
 
-console.log(`Listening on ${server.url}`);
+export default app;
