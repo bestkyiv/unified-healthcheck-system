@@ -1,9 +1,23 @@
 import { Hono } from 'hono';
+import { logger } from 'hono/logger';
 
-const app = new Hono();
+import { prisma } from './lib/prisma';
 
-app.get('/', (c) => {
-  return c.json([1, 2, 3]);
-});
+const buildApp = async () => {
+  await prisma.$connect();
 
-export default app;
+  const app = new Hono();
+  app.use(logger());
+
+  const shutdown = async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+
+  return app;
+};
+
+export default await buildApp();

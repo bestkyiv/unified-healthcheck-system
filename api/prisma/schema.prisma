@@ -11,3 +11,32 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum ServiceType {
+  website
+  telegramBot
+}
+
+enum Status {
+  up
+  down
+  pending
+}
+
+model Service {
+  id                 Int         @id @default(autoincrement())
+  name               String      @db.VarChar(255)
+  type               ServiceType
+  urlOrIdentifier    String      @db.VarChar(500)
+  isMonitored        Boolean     @default(true)
+  status             Status
+  intervalMs         Int         @default(60000)
+
+  lastCheckedAt      DateTime?
+  lastHeartbeatAt    DateTime?
+  
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@unique([type, urlOrIdentifier])
+}
