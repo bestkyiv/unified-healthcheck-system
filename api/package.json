@@ -5,8 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "db:up": "docker compose -f postgres/docker-compose.yml up -d",
+    "db:up": "docker compose -f postgres/docker-compose.yml up -d --wait && bun run db:migrate",
     "db:down": "docker compose -f postgres/docker-compose.yml down",
+    "db:migrate": "bun --bun prisma migrate deploy && bun --bun prisma generate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -15,16 +16,21 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/bun": "latest",
+    "@types/pg": "^8.20.0",
     "eslint": "^10.4.1",
     "globals": "^17.6.0",
     "jiti": "^2.7.0",
     "prettier": "^3.8.3",
+    "prisma": "^7.8.0",
     "typescript-eslint": "^8.60.1"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "hono": "^4.12.23"
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "hono": "^4.12.23",
+    "pg": "^8.21.0"
   }
 }
