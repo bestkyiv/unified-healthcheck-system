@@ -24,19 +24,35 @@ enum Status {
 }
 
 model Service {
-  id                 Int         @id @default(autoincrement())
-  name               String      @db.VarChar(255)
-  type               ServiceType
-  urlOrIdentifier    String      @db.VarChar(500)
-  isMonitored        Boolean     @default(true)
-  status             Status
-  intervalMs         Int         @default(60000)
+  id              Int           @id @default(autoincrement())
+  name            String        @db.VarChar(255)
+  type            ServiceType
+  urlOrIdentifier String        @db.VarChar(500)
+  telegramBotId   Int?          @unique
+  isMonitored     Boolean       @default(true)
+  status          Status
+  intervalMs      Int           @default(60000)
 
-  lastCheckedAt      DateTime?
-  lastHeartbeatAt    DateTime?
-  
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  lastCheckedAt   DateTime?
+  lastHeartbeatAt DateTime?
+
+  heathChecks     HealthCheck[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@unique([type, urlOrIdentifier])
+}
+
+model HealthCheck {
+  id               Int      @id @default(autoincrement())
+  serviceId        Int
+  status           Status
+  response_time_ms Int?
+  error_message    String?
+  checked_at       DateTime @default(now())
+
+  service          Service  @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId, checked_at])
 }
