@@ -17,7 +17,14 @@ const buildApp = async () => {
   app.onError((err, c) => {
     if (err instanceof HTTPException) {
       if (err.status >= 500) {
-        return c.json({ error: 'Internal server error' }, err.status);
+        return c.json(
+          {
+            error: 'Internal server error',
+            cause:
+              process.env.NODE_ENV === 'production' ? undefined : err.cause,
+          },
+          err.status,
+        );
       }
 
       return c.json(
