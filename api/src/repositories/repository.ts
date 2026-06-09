@@ -15,4 +15,8 @@ export interface IServiceRepository {
     isMonitored: boolean,
   ): Promise<Service>;
   deleteById(serviceId: number): Promise<Service | null>;
+  findByUrlOrIdentifier(
+    type: 'website' | 'telegramBot',
+    urlOrIdentifier: string,
+  ): Promise<Service | null>;
 }

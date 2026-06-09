@@ -1,8 +1,5 @@
 import type { PrismaClient, Service } from '../../generated/prisma/client.js';
-import type {
-  CreateServiceInput,
-  IServiceRepository,
-} from './repository.js';
+import type { CreateServiceInput, IServiceRepository } from './repository.js';
 
 export class ServiceRepository implements IServiceRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -47,6 +44,20 @@ export class ServiceRepository implements IServiceRepository {
 
     return this.prisma.service.delete({
       where: { id: serviceId },
+    });
+  }
+
+  findByUrlOrIdentifier(
+    type: 'website' | 'telegramBot',
+    urlOrIdentifier: string,
+  ) {
+    return this.prisma.service.findUnique({
+      where: {
+        type_urlOrIdentifier: {
+          type,
+          urlOrIdentifier,
+        },
+      },
     });
   }
 }
