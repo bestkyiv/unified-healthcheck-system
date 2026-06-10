@@ -11,7 +11,14 @@ const getObjectToValidate = async (
 ) => {
   switch (source) {
     case 'body':
-      return await request.json();
+      try {
+        return await request.json();
+      } catch (err) {
+        throw new HTTPException(400, {
+          message: 'Invalid request body',
+          cause: process.env.NODE_ENV === 'production' ? undefined : err,
+        });
+      }
     case 'params':
       return request.param();
     case 'query':

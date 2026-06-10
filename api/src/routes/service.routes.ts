@@ -6,8 +6,12 @@ import type { ServiceController } from '../controllers/service.controller';
 export const createServiceRoutes = (serviceController: ServiceController) => {
   const router = new Hono();
 
-  router.post('/', authenticateNotificationBot, (c) =>
+  router.post('/', authenticateNotificationBot, c =>
     serviceController.addService(c),
+  );
+
+  router.patch('/:id', authenticateNotificationBot, c =>
+    serviceController.switchMonitoringState(c),
   );
 
   return router;
