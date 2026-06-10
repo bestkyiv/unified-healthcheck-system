@@ -3,7 +3,6 @@ export {
   type AddServiceRequest,
 } from './addServiceRequest';
 
-export {
-  switchMonitoringStateParamsSchema,
-  switchMonitoringStateRequestSchema,
-} from './switchMonitoringStateRequest';
+export { idParamsSchema } from './idParamsSchema';
+
+export { switchMonitoringStateRequestSchema } from './switchMonitoringStateRequest';

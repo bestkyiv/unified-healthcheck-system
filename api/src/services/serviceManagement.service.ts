@@ -40,7 +40,10 @@ export class ServiceManagementService {
     }
   }
 
-  async switchMonitoringState(serviceId: number, state: boolean) {
+  async switchMonitoringState(
+    serviceId: number,
+    state: boolean,
+  ): Promise<Partial<ServiceResponseDto>> {
     try {
       const service = await this.serviceRepository.switchMonitoringState(
         serviceId,
@@ -52,6 +55,29 @@ export class ServiceManagementService {
         type: service.type,
         urlOrIdentifier: service.urlOrIdentifier,
         isMonitored: service.isMonitored,
+      };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new HTTPException(404, {
+          message: 'Service not found',
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  async deleteService(serviceId: number): Promise<Partial<ServiceResponseDto>> {
+    try {
+      const service = await this.serviceRepository.deleteById(serviceId);
+      return {
+        id: service.id,
+        name: service.name,
+        type: service.type,
+        urlOrIdentifier: service.urlOrIdentifier,
       };
     } catch (error) {
       if (

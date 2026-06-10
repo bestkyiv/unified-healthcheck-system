@@ -6,7 +6,7 @@ import type { ServiceManagementService } from '../services/serviceManagement.ser
 
 import {
   addServiceRequestSchema,
-  switchMonitoringStateParamsSchema,
+  idParamsSchema,
   switchMonitoringStateRequestSchema,
 } from '../commons/schemas';
 
@@ -34,7 +34,7 @@ export class ServiceController {
   async switchMonitoringState(c: Context) {
     const { id } = await validateRequest(
       c.req,
-      switchMonitoringStateParamsSchema,
+      idParamsSchema,
       'Invalid route params',
       'params',
     );
@@ -47,6 +47,19 @@ export class ServiceController {
       id,
       isMonitored,
     );
+
+    return c.json(data, 200);
+  }
+
+  async deleteService(c: Context) {
+    const { id } = await validateRequest(
+      c.req,
+      idParamsSchema,
+      'Invalid route params',
+      'params',
+    );
+
+    const data = await this.serviceManagementService.deleteService(id);
 
     return c.json(data, 200);
   }

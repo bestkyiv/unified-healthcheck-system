@@ -14,5 +14,9 @@ export const createServiceRoutes = (serviceController: ServiceController) => {
     serviceController.switchMonitoringState(c),
   );
 
+  router.delete('/:id', authenticateNotificationBot, c =>
+    serviceController.deleteService(c),
+  );
+
   return router;
 };

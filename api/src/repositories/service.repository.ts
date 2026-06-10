@@ -35,13 +35,7 @@ export class ServiceRepository implements IServiceRepository {
     });
   }
 
-  async deleteById(serviceId: number): Promise<Service | null> {
-    const service = await this.prisma.service.findUnique({
-      where: { id: serviceId },
-    });
-
-    if (!service) return null;
-
+  deleteById(serviceId: number): Promise<Service> {
     return this.prisma.service.delete({
       where: { id: serviceId },
     });
