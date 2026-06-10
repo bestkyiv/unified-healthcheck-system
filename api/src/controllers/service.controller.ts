@@ -7,6 +7,7 @@ import type { ServiceManagementService } from '../services/serviceManagement.ser
 import {
   addServiceRequestSchema,
   idParamsSchema,
+  serviceStatusQuerySchema,
   switchMonitoringStateRequestSchema,
 } from '../commons/schemas';
 
@@ -29,6 +30,28 @@ export class ServiceController {
     });
 
     return c.json(data, 201);
+  }
+
+  async listServices(c: Context) {
+    const data = await this.serviceManagementService.listServices();
+
+    return c.json(data, 200);
+  }
+
+  async getServiceStatus(c: Context) {
+    const { type, urlOrIdentifier } = await validateRequest(
+      c.req,
+      serviceStatusQuerySchema,
+      'Invalid query params',
+      'query',
+    );
+
+    const data = await this.serviceManagementService.getServiceStatus({
+      type,
+      urlOrIdentifier,
+    });
+
+    return c.json(data, 200);
   }
 
   async switchMonitoringState(c: Context) {

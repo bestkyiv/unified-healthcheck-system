@@ -44,7 +44,7 @@ export class ServiceRepository implements IServiceRepository {
   findByUrlOrIdentifier(
     type: 'website' | 'telegramBot',
     urlOrIdentifier: string,
-  ) {
+  ): Promise<Service | null> {
     return this.prisma.service.findUnique({
       where: {
         type_urlOrIdentifier: {
