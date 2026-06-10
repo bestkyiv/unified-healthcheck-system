@@ -45,4 +45,5 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('api/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
+      - run: bun --bun prisma generate
       - run: bun test
