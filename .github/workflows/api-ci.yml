@@ -46,4 +46,6 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun --bun prisma generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
       - run: bun test
