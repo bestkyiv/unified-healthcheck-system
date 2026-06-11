@@ -66,5 +66,5 @@ jobs:
           DATABASE_URL="postgresql://userexample:example@localhost:5432/testdb?schema=public"
           BOT_TO_API_KEY=bot-to-api-key
           EOF
-      - run: bun --bun prisma generate
-      - run: bun test
+      - run: bun --bun --env-file=.env.test prisma generate
+      - run: bun run test
